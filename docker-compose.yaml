@@ -1,0 +1,46 @@
+# The Docker Config version. Do not change.
+version: "3.1"
+services: 
+  frontend:
+    image: nailuj843/frontend
+    container_name: frontend
+    ports: 
+      - "3000:3000"
+    networks:
+      - app-network 
+    depends_on:
+      - server
+
+  server: 
+    image: nailuj843/backend
+    container_name: server
+    ports: 
+      - "3001:3001"
+    networks:
+      - app-network
+    environment:
+      DB_CONNECTION_STRING: postgres://postgres:docker@db:5432/dockerdb
+      WAIT_HOSTS: db:5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: nailuj843/db
+    container_name: db
+    ports: 
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: docker
+    networks:
+      - app-network
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+networks:
+  app-network:
+    driver: bridge
